@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Health Plan">
+<title>My Health Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #181c27;
+    --card2: #1e2235;
+    --accent: #4ade80;
+    --accent2: #38bdf8;
+    --accent3: #fb923c;
+    --purple: #a78bfa;
+    --text: #e8eaf0;
+    --muted: #7a8099;
+    --border: rgba(255,255,255,0.07);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overscroll-behavior: none;
+  }
+
+  /* NAV TABS */
+  .tab-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(24,28,39,0.97);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding-bottom: var(--safe-bottom);
+    z-index: 100;
+  }
+
+  .tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0 8px;
+    gap: 4px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.2s;
+    border: none;
+    background: none;
+  }
+  .tab.active { color: var(--accent); }
+  .tab-icon { font-size: 20px; line-height: 1; }
+
+  /* PAGES */
+  .page {
+    display: none;
+    padding: 0 0 90px;
+    min-height: 100dvh;
+  }
+  .page.active { display: block; }
+
+  /* PAGE HEADER */
+  .page-header {
+    padding: 52px 20px 20px;
+    position: relative;
+  }
+  .page-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .page-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+  .page-title span { color: var(--accent); }
+
+  /* DATE STRIP */
+  .date-strip {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .date-strip strong { color: var(--text); font-size: 13px; }
+
+  /* PROGRESS RING */
+  .progress-section {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .ring-wrap { position: relative; flex-shrink: 0; }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--card2); stroke-width: 8; }
+  .ring-fill { fill: none; stroke: var(--accent); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
+  .ring-text {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .ring-pct {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; line-height: 1;
+    color: var(--accent);
+  }
+  .ring-sub { font-size: 9px; color: var(--muted); letter-spacing: 0.1em; }
+  .progress-info { flex: 1; }
+  .progress-info h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; color: var(--text);
+    margin-bottom: 4px;
+  }
+  .progress-info p { font-size: 13px; color: var(--muted); font-weight: 300; line-height: 1.5; }
+
+  /* CHECKLIST */
+  .checklist-wrap { padding: 0 16px; }
+
+  .check-group { margin-bottom: 18px; }
+  .group-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 4px;
+    margin-bottom: 8px;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .check-item.done {
+    opacity: 0.55;
+    border-color: transparent;
+  }
+  .check-item.done .check-circle { background: var(--accent); border-color: var(--accent); }
+  .check-item.done .check-circle::after {
+    content: '✓';
+    color: #0f1117;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .check-circle {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .check-circle.green { border-color: var(--accent); }
+  .check-circle.blue  { border-color: var(--accent2); }
+  .check-circle.orange{ border-color: var(--accent3); }
+  .check-circle.purple{ border-color: var(--purple); }
+
+  .check-text { flex: 1; }
+  .check-title { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+  .check-sub { font-size: 11px; color: var(--muted); font-weight: 300; }
+
+  .check-emoji { font-size: 20px; flex-shrink: 0; }
+
+  /* RESET BUTTON */
+  .reset-btn {
+    display: block;
+    width: calc(100% - 32px);
+    margin: 8px 16px 0;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--card2);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .reset-btn:active { opacity: 0.7; }
+
+  /* NOTIFICATIONS PAGE */
+  .notif-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin: 0 16px 12px;
+    overflow: hidden;
+  }
+  .notif-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .notif-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .notif-icon.green  { background: rgba(74,222,128,0.15); }
+  .notif-icon.orange { background: rgba(251,146,60,0.15); }
+  .notif-icon.purple { background: rgba(167,139,250,0.15); }
+
+  .notif-info { flex: 1; }
+  .notif-name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+  .notif-time { font-size: 12px; color: var(--muted); }
+
+  .toggle {
+    width: 44px; height: 26px;
+    background: var(--card2);
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s;
+    flex-shrink: 0;
+    border: none;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    background: white;
+    border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: transform 0.3s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .toggle.on::after { transform: translateX(18px); }
+
+  .notif-body { padding: 14px 16px; }
+  .time-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .time-input-row label { font-size: 12px; color: var(--muted); width: 50px; }
+  .time-input {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 8px 12px;
+    flex: 1;
+    outline: none;
+  }
+  .time-input:focus { border-color: var(--accent); }
+
+  .save-btn {
+    width: 100%;
+    padding: 11px;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent);
+    color: #0f1117;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: opacity 0.2s;
+  }
+  .save-btn:active { opacity: 0.8; }
+
+  /* PERMISSION BANNER */
+  .perm-banner {
+    margin: 0 16px 16px;
+    background: rgba(251,146,60,0.12);
+    border: 1px solid rgba(251,146,60,0.3);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+    display: none;
+  }
+  .perm-banner.show { display: block; }
+  .perm-btn {
+    margin-top: 10px;
+    display: inline-block;
+    background: var(--accent3);
+    color: #0f1117;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* PLAN PAGE */
+  .plan-section {
+    margin: 0 16px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+  }
+  .plan-section-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .plan-icon {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .plan-icon.green  { background: rgba(74,222,128,0.15); }
+  .plan-icon.blue   { background: rgba(56,189,248,0.15); }
+  .plan-icon.orange { background: rgba(251,146,60,0.15); }
+  .plan-icon.purple { background: rgba(167,139,250,0.15); }
+  .plan-section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: 0.04em;
+  }
+  .plan-rows { display: flex; flex-direction: column; gap: 8px; }
+  .plan-row { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; line-height: 1.5; }
+  .plan-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    margin-top: 7px; flex-shrink: 0;
+  }
+  .plan-dot.green  { background: var(--accent); }
+  .plan-dot.blue   { background: var(--accent2); }
+  .plan-dot.orange { background: var(--accent3); }
+  .plan-dot.purple { background: var(--purple); }
+
+  .calorie-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .cal-cell {
+    background: var(--card);
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .cal-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px; line-height: 1;
+  }
+  .cal-val.green  { color: var(--accent); }
+  .cal-val.blue   { color: var(--accent2); }
+  .cal-val.orange { color: var(--accent3); }
+  .cal-unit { font-size: 10px; color: var(--muted); letter-spacing: 0.05em; margin-top: 3px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 85px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--accent);
+    color: #0f1117;
+    padding: 10px 20px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .page.active > * { animation: fadeUp 0.3s ease both; }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- PAGE: TODAY -->
+<div class="page active" id="page-today">
+  <div class="page-header">
+    <div class="page-label">Daily Progress</div>
+    <div class="page-title">TODAY'S <span>PLAN</span></div>
+  </div>
+
+  <div class="date-strip">
+    <span id="today-date">Monday</span>
+    <strong id="done-count">0 / 8 done</strong>
+  </div>
+
+  <div class="progress-section">
+    <div class="ring-wrap">
+      <svg width="90" height="90" viewBox="0 0 90 90">
+        <circle class="ring-bg" cx="45" cy="45" r="37"/>
+        <circle class="ring-fill" id="ring" cx="45" cy="45" r="37"
+          stroke-dasharray="232.5"
+          stroke-dashoffset="232.5"/>
+      </svg>
+      <div class="ring-text">
+        <div class="ring-pct" id="ring-pct">0%</div>
+        <div class="ring-sub">DONE</div>
+      </div>
+    </div>
+    <div class="progress-info">
+      <h2 id="progress-msg">Let's get started</h2>
+      <p id="progress-sub">Tick off each task as you complete it. Small wins add up.</p>
+    </div>
+  </div>
+
+  <div class="checklist-wrap">
+
+    <div class="check-group">
+      <div class="group-label">🌅 Morning</div>
+      <div class="check-item" data-id="mobility" onclick="toggle(this)">
+        <div class="check-circle purple"></div>
+        <div class="check-text">
+          <div class="check-title">Morning Mobility</div>
+          <div class="check-sub">10 mins — hip flexors, cat-cow, child's pose</div>
+        </div>
+        <div class="check-emoji">🧘</div>
+      </div>
+      <div class="check-item" data-id="breakfast" onclick="toggle(this)">
+        <div class="check-circle green"></div>
+        <div class="check-text">
+          <div class="check-title">Protein Breakfast</div>
+          <div class="check-sub">Eggs, porridge, or Greek yogurt</div>
+        </div>
+        <div class="check-emoji">🍳</div>
+      </div>
+    </div>
+
+    <div class="check-group">
+      <div class="group-label">☀️ Midday</div>
+      <div class="check-item" data-id="water" onclick="toggle(this)">
+        <div class="check-circle blue"></div>
+        <div class="check-text">
+          <div class="check-title">Water Bottle on Desk</div>
+          <div class="check-sub">Keep it full and visible all day</div>
+        </div>
+        <div class="check-emoji">💧</div>
+      </div>
+      <div class="check-item" data-id="snacks" onclick="toggle(this)">
+        <div class="check-circle orange"></div>
+        <div class="check-text">
+          <div class="check-title">Pre-Packed Snacks Only</div>
+          <div class="check-sub">Rice cakes, banana, yogurt — no vending machine</div>
+        </div>
+        <div class="check-emoji">🍌</div>
+      </div>
+      <div class="check-item" data-id="walk" onclick="toggle(this)">
+        <div class="check-circle green"></div>
+        <div class="check-text">
+          <div class="check-title">Lunch Walk</div>
+          <div class="check-sub">45 mins, brisk pace</div>
+        </div>
+        <div class="check-emoji">🚶</div>
+      </div>
+    </div>
+
+    <div class="check-group">
+      <div class="group-label">🌙 Evening</div>
+      <div class="check-item" data-id="standup" onclick="toggle(this)">
+        <div class="check-circle blue"></div>
+        <div class="check-text">
+          <div class="check-title">Stood Up Every Hour</div>
+          <div class="check-sub">2 min break from desk each hour</div>
+        </div>
+        <div class="check-emoji">🖥️</div>
+      </div>
+      <div class="check-item" data-id="calories" onclick="toggle(this)">
+        <div class="check-circle orange"></div>
+        <div class="check-text">
+          <div class="check-title">Stayed Under 1,900 Calories</div>
+          <div class="check-sub">~500 kcal deficit for fat loss</div>
+        </div>
+        <div class="check-emoji">🍽️</div>
+      </div>
+      <div class="check-item" data-id="workout" onclick="toggle(this)">
+        <div class="check-circle green"></div>
+        <div class="check-text">
+          <div class="check-title">Home Workout / Jog</div>
+          <div class="check-sub">Optional — 20 min circuit or nursery-day jog</div>
+        </div>
+        <div class="check-emoji">🏃</div>
+      </div>
+    </div>
+
+    <button class="reset-btn" onclick="resetAll()">↺ Reset for today</button>
+  </div>
+</div>
+
+<!-- PAGE: NOTIFICATIONS -->
+<div class="page" id="page-notifs">
+  <div class="page-header">
+    <div class="page-label">Reminders</div>
+    <div class="page-title">NOTIFI<span>CATIONS</span></div>
+  </div>
+
+  <div class="perm-banner" id="perm-banner">
+    ⚠️ Notifications are blocked or not yet enabled. Tap below to allow reminders from this app.
+    <br><button class="perm-btn" onclick="requestPermission()">Enable Notifications</button>
+  </div>
+
+  <!-- MOBILITY -->
+  <div class="notif-card">
+    <div class="notif-header">
+      <div class="notif-icon purple">🧘</div>
+      <div class="notif-info">
+        <div class="notif-name">Morning Mobility</div>
+        <div class="notif-time" id="mobility-display">7:30 AM</div>
+      </div>
+      <button class="toggle on" id="toggle-mobility" onclick="toggleNotif('mobility')"></button>
+    </div>
+    <div class="notif-body">
+      <div class="time-input-row">
+        <label>Time</label>
+        <input type="time" class="time-input" id="time-mobility" value="07:30">
+      </div>
+      <button class="save-btn" onclick="saveNotif('mobility')">Save Reminder</button>
+    </div>
+  </div>
+
+  <!-- LUNCH WALK -->
+  <div class="notif-card">
+    <div class="notif-header">
+      <div class="notif-icon green">🚶</div>
+      <div class="notif-info">
+        <div class="notif-name">Lunch Walk</div>
+        <div class="notif-time" id="walk-display">12:00 PM</div>
+      </div>
+      <button class="toggle on" id="toggle-walk" onclick="toggleNotif('walk')"></button>
+    </div>
+    <div class="notif-body">
+      <div class="time-input-row">
+        <label>Time</label>
+        <input type="time" class="time-input" id="time-walk" value="12:00">
+      </div>
+      <button class="save-btn" onclick="saveNotif('walk')">Save Reminder</button>
+    </div>
+  </div>
+
+  <!-- WORKOUT -->
+  <div class="notif-card">
+    <div class="notif-header">
+      <div class="notif-icon orange">🏃</div>
+      <div class="notif-info">
+        <div class="notif-name">Evening Workout</div>
+        <div class="notif-time" id="workout-display">7:30 PM</div>
+      </div>
+      <button class="toggle on" id="toggle-workout" onclick="toggleNotif('workout')"></button>
+    </div>
+    <div class="notif-body">
+      <div class="time-input-row">
+        <label>Time</label>
+        <input type="time" class="time-input" id="time-workout" value="19:30">
+      </div>
+      <button class="save-btn" onclick="saveNotif('workout')">Save Reminder</button>
+    </div>
+  </div>
+
+  <p style="text-align:center;font-size:11px;color:var(--muted);padding:8px 20px 0;line-height:1.6;">
+    Reminders are scheduled daily via your browser.<br>
+    Keep this app open in Chrome for best results.
+  </p>
+</div>
+
+<!-- PAGE: PLAN -->
+<div class="page" id="page-plan">
+  <div class="page-header">
+    <div class="page-label">Full Reference</div>
+    <div class="page-title">YOUR <span>PLAN</span></div>
+  </div>
+
+  <!-- CALORIE GOAL -->
+  <div class="calorie-bar" style="margin:0 16px 14px;">
+    <div class="cal-cell">
+      <div class="cal-val green">1,900</div>
+      <div class="cal-unit">CALS/DAY</div>
+    </div>
+    <div class="cal-cell">
+      <div class="cal-val blue">~500</div>
+      <div class="cal-unit">DEFICIT</div>
+    </div>
+    <div class="cal-cell">
+      <div class="cal-val orange">0.5–1kg</div>
+      <div class="cal-unit">PER WEEK</div>
+    </div>
+  </div>
+
+  <div class="plan-section">
+    <div class="plan-section-header">
+      <div class="plan-icon green">🚶</div>
+      <div class="plan-section-title">Exercise</div>
+    </div>
+    <div class="plan-rows">
+      <div class="plan-row"><div class="plan-dot green"></div><div><strong>Lunch walk every weekday</strong> — 45 mins, brisk pace. Your foundation.</div></div>
+      <div class="plan-row"><div class="plan-dot green"></div><div><strong>Steps:</strong> Start 8,000/day, build to 12,000 over 6–8 weeks.</div></div>
+      <div class="plan-row"><div class="plan-dot green"></div><div><strong>Weekends:</strong> Active family time — parks, pram walks. Counts.</div></div>
+      <div class="plan-row"><div class="plan-dot green"></div><div><strong>Home workout 2x/week (20 mins):</strong> 3 rounds — 10 squats → 8 push-ups → 20s plank → 10 glute bridges.</div></div>
+    </div>
+  </div>
+
+  <div class="plan-section">
+    <div class="plan-section-header">
+      <div class="plan-icon orange">🏃</div>
+      <div class="plan-section-title">Morning Jog (2x/week)</div>
+    </div>
+    <div class="plan-rows">
+      <div class="plan-row"><div class="plan-dot orange"></div><div><strong>Nursery drop-off days</strong> — home by 8am, 30 mins out.</div></div>
+      <div class="plan-row"><div class="plan-dot orange"></div><div><strong>Weeks 1–2:</strong> 1 min jog / 2 min walk × 25–30 mins</div></div>
+      <div class="plan-row"><div class="plan-dot orange"></div><div><strong>Weeks 3–4:</strong> 2 min jog / 1 min walk × 25–30 mins</div></div>
+      <div class="plan-row"><div class="plan-dot orange"></div><div><strong>Weeks 5–6:</strong> 5 min jog / 1 min walk, repeat</div></div>
+      <div class="plan-row"><div class="plan-dot orange"></div><div><strong>Weeks 7–8:</strong> 10–15 min continuous jog, build from there</div></div>
+      <div class="plan-row"><div class="plan-dot orange"></div><div>Always do 5 mins mobility <em>before</em> jogging.</div></div>
+    </div>
+  </div>
+
+  <div class="plan-section">
+    <div class="plan-section-header">
+      <div class="plan-icon purple">🧘</div>
+      <div class="plan-section-title">Daily Mobility (10 mins)</div>
+    </div>
+    <div class="plan-rows">
+      <div class="plan-row"><div class="plan-dot purple"></div><div><strong>Hip flexor stretch</strong> — kneeling lunge, 30–45s each side</div></div>
+      <div class="plan-row"><div class="plan-dot purple"></div><div><strong>Figure-4 stretch</strong> — lying on back, hips &amp; lower back</div></div>
+      <div class="plan-row"><div class="plan-dot purple"></div><div><strong>Cat-cow</strong> — 10 slow reps, full spine</div></div>
+      <div class="plan-row"><div class="plan-dot purple"></div><div><strong>Child's pose</strong> — 45s hold</div></div>
+      <div class="plan-row"><div class="plan-dot purple"></div><div><strong>Hamstring stretch &amp; hip circles</strong> — use doorframe for balance</div></div>
+    </div>
+  </div>
+
+  <div class="plan-section">
+    <div class="plan-section-header">
+      <div class="plan-icon blue">🖥️</div>
+      <div class="plan-section-title">Desk Habits</div>
+    </div>
+    <div class="plan-rows">
+      <div class="plan-row"><div class="plan-dot blue"></div><div><strong>Stand up every hour</strong> for 2 minutes — set phone reminder.</div></div>
+      <div class="plan-row"><div class="plan-dot blue"></div><div><strong>Posture:</strong> Feet flat, screen at eye level, towel in small of back.</div></div>
+    </div>
+  </div>
+
+  <div class="plan-section">
+    <div class="plan-section-header">
+      <div class="plan-icon orange">🍽️</div>
+      <div class="plan-section-title">Nutrition</div>
+    </div>
+    <div class="plan-rows">
+      <div class="plan-row"><div class="plan-dot orange"></div><div><strong>Breakfast:</strong> Eggs, porridge, or Greek yogurt</div></div>
+      <div class="plan-row"><div class="plan-dot orange"></div><div><strong>Lunch:</strong> Sandwich with protein, soup, or leftovers</div></div>
+      <div class="plan-row"><div class="plan-dot orange"></div><div><strong>Dinner:</strong> Family meal — half plate veg, watch portions</div></div>
+      <div class="plan-row"><div class="plan-dot orange"></div><div><strong>Snacks:</strong> From home only — rice cakes, banana, yogurt, oatcakes. Max 2/day.</div></div>
+      <div class="plan-row"><div class="plan-dot orange"></div><div><strong>Easy win:</strong> Cut sugary drinks — saves 200–300 kcal/day.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB BAR -->
+<nav class="tab-bar">
+  <button class="tab active" onclick="showPage('today', this)">
+    <span class="tab-icon">✅</span>Today
+  </button>
+  <button class="tab" onclick="showPage('notifs', this)">
+    <span class="tab-icon">🔔</span>Reminders
+  </button>
+  <button class="tab" onclick="showPage('plan', this)">
+    <span class="tab-icon">📋</span>My Plan
+  </button>
+</nav>
+
+<script>
+// ── STATE ──────────────────────────────────────────────
+const STORAGE_KEY = 'healthapp_v2';
+const NOTIF_KEY   = 'healthapp_notifs';
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+let notifSettings = JSON.parse(localStorage.getItem(NOTIF_KEY) || JSON.stringify({
+  mobility: { enabled: true, time: '07:30' },
+  walk:     { enabled: true, time: '12:00' },
+  workout:  { enabled: true, time: '19:30' }
+}));
+
+const ITEMS = ['mobility','breakfast','water','snacks','walk','standup','calories','workout'];
+const msgs = [
+  ['Let\'s get started','Tick off each task as you complete it. Small wins add up.'],
+  ['Good start!','Keep the momentum going.'],
+  ['Building nicely','You\'re making real progress today.'],
+  ['Halfway there 💪','More than halfway — don\'t stop now.'],
+  ['Great work!','Almost there, keep pushing.'],
+  ['Nearly done!','Just a couple left — finish strong.'],
+  ['So close!','One more to go.'],
+  ['One left...','Finish it off!'],
+  ['Complete! 🎉','Full day done. That\'s how it\'s done.']
+];
+
+// ── INIT ───────────────────────────────────────────────
+function init() {
+  const today = new Date().toDateString();
+  if (state.date !== today) { state = { date: today, done: {} }; save(); }
+
+  // Restore checks
+  ITEMS.forEach(id => {
+    if (state.done[id]) {
+      const el = document.querySelector(`[data-id="${id}"]`);
+      if (el) el.classList.add('done');
+    }
+  });
+
+  updateDate();
+  updateProgress();
+  loadNotifSettings();
+  checkPermission();
+  scheduleAll();
+}
+
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function saveNotifs() { localStorage.setItem(NOTIF_KEY, JSON.stringify(notifSettings)); }
+
+// ── CHECKLIST ──────────────────────────────────────────
+function toggle(el) {
+  const id = el.dataset.id;
+  el.classList.toggle('done');
+  state.done[id] = el.classList.contains('done');
+  save();
+  updateProgress();
+  if (state.done[id]) showToast(getToastMsg(id));
+}
+
+function getToastMsg(id) {
+  const map = {
+    mobility: '🧘 Mobility done!', breakfast: '🍳 Breakfast ticked!',
+    water: '💧 Hydration on track!', snacks: '🍌 Snacks sorted!',
+    walk: '🚶 Walk complete!', standup: '🖥️ Desk breaks done!',
+    calories: '🍽️ Calories on target!', workout: '🏃 Workout done!'
+  };
+  return map[id] || '✅ Done!';
+}
+
+function resetAll() {
+  ITEMS.forEach(id => {
+    const el = document.querySelector(`[data-id="${id}"]`);
+    if (el) el.classList.remove('done');
+  });
+  state.done = {};
+  save();
+  updateProgress();
+  showToast('↺ Reset for today');
+}
+
+function updateProgress() {
+  const count = ITEMS.filter(id => state.done[id]).length;
+  const total = ITEMS.length;
+  const pct = Math.round((count / total) * 100);
+  const circ = 232.5;
+  document.getElementById('ring').style.strokeDashoffset = circ - (circ * pct / 100);
+  document.getElementById('ring-pct').textContent = pct + '%';
+  document.getElementById('done-count').textContent = `${count} / ${total} done`;
+  const m = msgs[count];
+  document.getElementById('progress-msg').textContent = m[0];
+  document.getElementById('progress-sub').textContent = m[1];
+}
+
+function updateDate() {
+  const d = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('today-date').textContent =
+    `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`;
+}
+
+// ── NAVIGATION ─────────────────────────────────────────
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── TOAST ──────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── NOTIFICATIONS ──────────────────────────────────────
+function fmt12(time24) {
+  const [h, m] = time24.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+
+function loadNotifSettings() {
+  ['mobility','walk','workout'].forEach(key => {
+    const s = notifSettings[key];
+    document.getElementById('time-' + key).value = s.time;
+    document.getElementById(key + '-display').textContent = fmt12(s.time);
+    const toggle = document.getElementById('toggle-' + key);
+    toggle.classList.toggle('on', s.enabled);
+  });
+}
+
+function toggleNotif(key) {
+  notifSettings[key].enabled = !notifSettings[key].enabled;
+  document.getElementById('toggle-' + key).classList.toggle('on', notifSettings[key].enabled);
+  saveNotifs();
+  scheduleAll();
+}
+
+function saveNotif(key) {
+  const time = document.getElementById('time-' + key).value;
+  notifSettings[key].time = time;
+  document.getElementById(key + '-display').textContent = fmt12(time);
+  saveNotifs();
+  scheduleAll();
+  showToast('✅ Reminder saved!');
+}
+
+// ── PERMISSION ─────────────────────────────────────────
+function checkPermission() {
+  if (!('Notification' in window)) return;
+  const banner = document.getElementById('perm-banner');
+  if (Notification.permission === 'granted') {
+    banner.classList.remove('show');
+  } else {
+    banner.classList.add('show');
+  }
+}
+
+function requestPermission() {
+  if (!('Notification' in window)) {
+    showToast('Notifications not supported in this browser');
+    return;
+  }
+  Notification.requestPermission().then(result => {
+    checkPermission();
+    if (result === 'granted') {
+      showToast('🔔 Notifications enabled!');
+      scheduleAll();
+    }
+  });
+}
+
+// ── SCHEDULING ─────────────────────────────────────────
+// Uses setTimeout to fire browser notifications at the right time today
+// Stores scheduled timeouts so we can clear and reschedule
+let scheduledTimeouts = {};
+
+function scheduleAll() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+  // Clear existing
+  Object.values(scheduledTimeouts).forEach(clearTimeout);
+  scheduledTimeouts = {};
+
+  const notifData = {
+    mobility: { title: '🧘 Morning Mobility', body: 'Time for your 10 min routine — hips, cat-cow, child\'s pose.' },
+    walk:     { title: '🚶 Lunch Walk Time!', body: 'Get outside for your 45 min walk. You\'ve got this.' },
+    workout:  { title: '🏃 Evening Workout', body: 'Optional 20 min home workout — or just rest. You decide.' }
+  };
+
+  const now = new Date();
+
+  ['mobility','walk','workout'].forEach(key => {
+    const s = notifSettings[key];
+    if (!s.enabled) return;
+
+    const [h, m] = s.time.split(':').map(Number);
+    const target = new Date();
+    target.setHours(h, m, 0, 0);
+
+    let delay = target - now;
+    if (delay < 0) return; // already passed today
+
+    scheduledTimeouts[key] = setTimeout(() => {
+      new Notification(notifData[key].title, {
+        body: notifData[key].body,
+        icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💪</text></svg>'
+      });
+    }, delay);
+  });
+}
+
+// ── START ──────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
